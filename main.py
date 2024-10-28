@@ -2,6 +2,8 @@ import torch
 import random
 import numpy as np
 
+from preprocessor.data_preprocessor import DataPreprocessor
+
 import logging
 import argparse
 import os
@@ -26,10 +28,12 @@ def get_arg_parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-p', '--parallel', type=int, help='멀티 gpu 사용 여부. 0=false, 1=true', default=0)
+    parser.add_argument('-lf', '--log_file', type=int, help='로그 파일 출력 여부. 0=false, 1=true', default=1)
+    parser.add_argument('-po', '--port', type=int, default=2033)
 
     parser.add_argument('-dn', '--data_name', type=str, help='데이터 파일 이름', default='')
 
-    args = parser.parse_args('')
+    args = parser.parse_args()
 
     check_device = get_default_device()
     if check_device.type == 'cpu':
@@ -78,6 +82,7 @@ def main(rank: int,
     logger.debug(f'args: {vars(args)}')
 
     logger.debug(f'init data preprocessing')
+    data_prep = DataPreprocessor(args)
 
 
 if __name__ == '__main__':

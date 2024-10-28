@@ -3,6 +3,7 @@ import argparse
 import os
 
 from datetime import datetime
+import sys
 
 
 class MainLogger:  # Singleton
@@ -37,6 +38,20 @@ class MainLogger:  # Singleton
             handler_file.setLevel(logging.DEBUG)
             handler_file.setFormatter(formatter_file)
             self.logger.addHandler(handler_file)
+
+        def catch_exception(exc_type, exc_value, exc_traceback):
+            if issubclass(exc_type, KeyboardInterrupt):
+                sys.__excepthook__(exc_type, exc_value, exc_traceback)
+                return
+
+            logger = logging.getLogger("main")
+
+            logger.error(
+                "Unexpected exception.",
+                exc_info=(exc_type, exc_value, exc_traceback)
+            )
+
+        sys.excepthook = catch_exception
 
     def __check_gpu_rank(self, gpu_rank: int) -> bool:
         if self.parallel == 0:
