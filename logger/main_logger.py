@@ -8,6 +8,7 @@ import sys
 
 class MainLogger:  # Singleton
     _instance = None
+    _initialized = False
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -16,6 +17,8 @@ class MainLogger:  # Singleton
 
     def __init__(self,
                  args: argparse.Namespace):
+        if self._initialized: return
+
         self.logger_name = 'main'
         self.parallel = args.parallel
 
@@ -38,6 +41,8 @@ class MainLogger:  # Singleton
             handler_file.setLevel(logging.DEBUG)
             handler_file.setFormatter(formatter_file)
             self.logger.addHandler(handler_file)
+
+        self._initialized = True
 
         def catch_exception(exc_type, exc_value, exc_traceback):
             if issubclass(exc_type, KeyboardInterrupt):
