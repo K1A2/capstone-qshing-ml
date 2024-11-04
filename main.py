@@ -33,6 +33,9 @@ def get_arg_parse() -> argparse.Namespace:
 
     parser.add_argument('-dn', '--data_name', type=str, help='데이터 파일 이름', default='')
 
+    parser.add_argument('-ml', '--max_length', type=int, help='tokenizer length', default=512)
+    parser.add_argument('-dw', '--data_workers', type=int, help='데이터 전처리 스레드 개수', default=4)
+
     args = parser.parse_args()
 
     check_device = get_default_device()
