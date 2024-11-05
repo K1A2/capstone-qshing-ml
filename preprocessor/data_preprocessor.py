@@ -6,6 +6,7 @@ from transformers import BertTokenizer
 from html2text import HTML2Text
 from bs4 import BeautifulSoup
 from langdetect import detect
+import re
 
 import os
 import argparse
@@ -57,18 +58,27 @@ class DataPreprocessor:
 
         urls, contents = [], []
         converter = HTML2Text()
+        converter.ignore_links = True
+        converter.ignore_images = True 
+        converter.ignore_tables = True
 
         for i in range(start_idx, end_idx):
             html = self.raw_data.iloc[i]['html']
             content = converter.handle(html)
 
-            try:
-                if detect(content) == 'en':
-                    contents.append(content)
-                else:
-                    contents.append('')
-            except:
-                contents.append('')
+            sentences = re.split(r'(?<=[.!?]) +', content)
+            
+            contents_parts = []
+            for s in sentences:
+                try:
+                    if detect(s) == 'en':
+                        contents_parts.append(s)
+                    # else:
+                    #     contents.append('')
+                except:
+                    pass
+                    # contents.append('')
+            contents.append(contents_parts)
 
             soup = BeautifulSoup(html, 'html.parser')
             url_parts = []
@@ -123,9 +133,14 @@ class DataPreprocessor:
 
     def __content_tokenizer(self, contents):
         tokens = ['[CLS]']
-        for text in tqdm(contents, desc='content tokenization'):
-            tokens.extend(self.tokenizer.tokenize(text))
-            tokens.append('[SEP]')
+        for sentences in tqdm(contents, desc='content tokenization'):
+            token = []
+            for idx, s in enumerate(sentences):
+                if idx != 0:
+                    token.append('[SEP]')
+                token.extend(s)
+            token = ''.join(token)
+            tokens.append(token)
 
         tokenized_output = self.tokenizer(tokens, return_tensors='pt', padding='max_length', max_length=self.max_length, truncation=True)
         return tokenized_output
