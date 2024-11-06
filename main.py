@@ -3,8 +3,11 @@ import random
 import numpy as np
 
 from preprocessor.data_preprocessor import DataPreprocessor
+from train import Trainer
+from model.qbert import QsingBertModel
 
-import logging
+from enums import OptimizerEnum, LRSchedulerEnum
+
 import argparse
 import os
 
@@ -27,14 +30,36 @@ torch.backends.cudnn.benchmark = False
 def get_arg_parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('-pm', '--model_path', type=str, help='모델 폴더 이름', default='')
+    parser.add_argument('--amp', type=int, help='amp 옵션', default=0)
+    
     parser.add_argument('-p', '--parallel', type=int, help='멀티 gpu 사용 여부. 0=false, 1=true', default=0)
     parser.add_argument('-lf', '--log_file', type=int, help='로그 파일 출력 여부. 0=false, 1=true', default=1)
     parser.add_argument('-po', '--port', type=int, default=2033)
+    
+    parser.add_argument('-op', '--optimizer', type=OptimizerEnum, help='옵티마이저', choices=list(OptimizerEnum), default=OptimizerEnum.sgd)
+    parser.add_argument('-ls', '--lr_scheduler', type=LRSchedulerEnum, help='lr 스케쥴러', choices=list(LRSchedulerEnum), default=LRSchedulerEnum.step_lr)
 
     parser.add_argument('-dn', '--data_name', type=str, help='데이터 파일 이름', default='')
-
+    parser.add_argument('-sd', '--save_data', type=int, help='전처리가 완료된 데이터 파일 불러오기 - 0 false, 1 true', default=0)
     parser.add_argument('-ml', '--max_length', type=int, help='tokenizer length', default=512)
     parser.add_argument('-dw', '--data_workers', type=int, help='데이터 전처리 스레드 개수', default=4)
+    parser.add_argument('-ds', '--split_ratio', type=float, help='train/validation 분할 비율', default=0.2)
+    parser.add_argument('-lw', '--loader_worker', type=int, help='dataloader worker 개수', default=0)
+    parser.add_argument('-b', '--batch_size', type=int, help='학습 배치사이즈', default=128)
+    
+    parser.add_argument('-e', '--epoch', type=int, help='epoch', default=100)
+    parser.add_argument('-mlr', '--max_learning_rate', type=float, help='optimizer/scheduler max learning rate 설정 (custom cos scheduler는 반대)', default=0.1)
+    parser.add_argument('-milr', '--min_learning_rate', type=float, help='optimizer/scheduler min learning rate 설정 (custom cos scheduler는 반대)', default=1e-4)
+    parser.add_argument('-wd', '--weight_decay', type=float, help='optimizer weight decay 설정', default=5e-4)
+    parser.add_argument('-gc', '--gradient_clip', type=float, help='gradient clip 설정. -1은 비활성화', default=-1)
+    parser.add_argument('-lsm', '--label_smoothing', type=float, help='label smoothing 설정', default=0.0)
+    parser.add_argument('-es', '--early_stopping', type=int, help='ealry stoppin epoch 지정. -1은 비활성화', default=-1)
+    parser.add_argument('-snt', '--nesterov', type=int, help="nesterov sgd 사용 여부", default=1)
+    parser.add_argument('--rho', type=int, help="SAM rho 파라미터", default=2.0)
+    parser.add_argument('-cm', '--cos_max', type=int, help="cos annealing 주기", default=50)
+    parser.add_argument('-sm', '--step_milestone', nargs='+', type=int, help='step lr scheduler milestone', default=[50])
+    
 
     args = parser.parse_args()
 
@@ -86,6 +111,10 @@ def main(rank: int,
 
     logger.debug(f'init data preprocessing')
     data_prep = DataPreprocessor(args)
+    
+    model = QsingBertModel()
+    trainer = Trainer(args, model, data_prep)
+    trainer.train()
 
 
 if __name__ == '__main__':
