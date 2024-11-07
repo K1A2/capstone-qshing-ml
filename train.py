@@ -184,12 +184,15 @@ class Trainer:
                         y_hat, y_prob = self.model(X)
                 else:
                     y_hat, y_prob = self.model(X)
-                _, predicted_labels = torch.max(y_prob,1)
+                
+                # self.logger.debug(f'{X}', self.gpu)
+                predicted_labels = (y_prob >= 0.5).long()
                 
                 loss = self.criterion(y_hat, y_true.float())
                 running_loss += loss.item() * y_true.size(0)
                 
                 n += y_true.size(0)
+                # self.logger.debug(f'{y_prob} {predicted_labels}, {predicted_labels == y_true}', self.gpu)
                 top1_pred += (predicted_labels == y_true).sum()
                 
                 # if get_top5:
@@ -245,8 +248,10 @@ class Trainer:
                 y_hat, _  = model(X)
                 loss = criterion(y_hat, y_true.float())
         else:
-            y_hat, _  = model(X)
+            y_hat, y_prob  = model(X)
             loss = criterion(y_hat, y_true.float())
+        # predicted_labels = (y_prob >= 0.5).long()
+        # self.logger.debug(f'{y_prob} {predicted_labels}, {predicted_labels == y_true}', self.gpu)
         return loss, model
     
     def __feed(self, train_loader, model, criterion, optimizer, device):
@@ -367,7 +372,7 @@ class Trainer:
             self.valid_superclass_list.append(val_superclass)
 
             self.logger.debug(f'Epoch: {epoch}\t'
-                f'Train loss: {train_loss:.4f}\t'
+                # f'Train loss: {train_loss:.4f}\t'
                 f'Valid loss: {valid_loss:.4f}\t'
                 f'Train accuracy: {100 * train_top1:.2f}\t'
                 f'Valid top1 accuracy: {100 * val_top1:.2f}\t'

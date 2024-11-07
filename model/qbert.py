@@ -32,6 +32,7 @@ class QsingBertModel(nn.Module):
         x = self.gelu(x)
 
         logits = self.output_layer(x)
+        logits = logits.squeeze()
         output = self.sigmoid(logits)
 
-        return logits.squeeze(), output
+        return logits, output

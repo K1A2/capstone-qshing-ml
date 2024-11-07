@@ -241,6 +241,9 @@ class DataPreprocessor:
         train_dataset = torch.utils.data.Subset(dataset, self.train_idx)
         val_dataset = torch.utils.data.Subset(dataset, self.val_idx)
         
+        self.logger.debug(f'tain: {len(self.train_idx)} valid: {len(self.val_idx)}')
+        # self.logger.debug(f'tain: {self.train_idx} valid: {self.val_idx}')
+        
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True,  num_workers=self.num_worker, pin_memory=True)
         valid_loader = torch.utils.data.DataLoader(val_dataset, batch_size=self.batch_size * 2, shuffle=True, pin_memory=True, num_workers=0)
         return train_loader, valid_loader
