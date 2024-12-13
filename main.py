@@ -16,13 +16,14 @@ from datetime import datetime
 from utils import get_default_device
 from logger.main_logger import MainLogger
 
+from change_randomseed import RANDOMSEED
 
-seed = 3243
-os.environ["PYTHONHASHSEED"] = str(seed)
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)
+
+random.seed(RANDOMSEED)
+os.environ["PYTHONHASHSEED"] = str(RANDOMSEED)
+np.random.seed(RANDOMSEED)
+torch.manual_seed(RANDOMSEED)
+torch.cuda.manual_seed_all(RANDOMSEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
