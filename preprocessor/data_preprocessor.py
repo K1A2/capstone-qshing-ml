@@ -3,7 +3,8 @@ import torch
 import sqlite3
 import pandas as pd
 
-from transformers import BertTokenizer
+from transformers import BertTokenizer, CharacterTokenizer
+from preprocessor.tokenizer import QbertUrlTokenizer
 
 from html2text import HTML2Text
 from bs4 import BeautifulSoup
@@ -83,6 +84,7 @@ class DataPreprocessor:
                     labels = pickle.load(f)
                 with open(self.save_train_val_idx, 'rb') as f:
                     train_val_idx = pickle.load(f)
+                self.url_tokenizer = QbertUrlTokenizer(pretrained_path='./data/tokenizer')
             except:
                 self.logger.debug(f'preprocessed data file not found', self.gpu)
                 self.__data_init()
@@ -95,8 +97,11 @@ class DataPreprocessor:
             self.__data_init()
 
     def __data_init(self):
-        con = sqlite3.connect(self.data_path)
-        self.raw_data = pd.read_sql("SELECT url, html, label FROM data", con, index_col=None)
+        self.url_tokenizer = QbertUrlTokenizer()
+        
+        # con = sqlite3.connect(self.data_path)
+        # self.raw_data = pd.read_sql("SELECT url, html, label FROM data", con, index_col=None)
+        self.raw_data = pd.read_csv(self.data_path)
         
         label_counts = self.raw_data['label'].value_counts()
         count_f = label_counts.get(0, 0)
@@ -120,9 +125,14 @@ class DataPreprocessor:
 
         self.labels = self.raw_data.iloc[:]['label']
         urls, contents = self.__extract_data()
+        
+        self.url_tokenizer.fit(urls, save_path='./data/tokenizer')
 
-        self.urls = self.__url_tokenizer(urls)
         self.contents = self.__content_tokenizer(contents)
+        
+        self.logger.debug(f'input_ids shape: {self.contents['input_ids'].shape}\attention_mask shape: {self.contents['attention_mask'].shape}')
+        
+        self.urls = self.__url_tokenizer(urls)
         
         train_idx, val_idx = [], []
         for cls in range(2):
@@ -205,21 +215,24 @@ class DataPreprocessor:
             thread_urls, thread_contents = future.result()
             urls.extend(thread_urls)
             contents.extend(thread_contents)
+        
+        # urls, contents = [], []
+        
+        # raw_html = self.raw_data.loc[:, 'html']
+        # raw_url = self.raw_data.loc[:, 'url']
+        
+        # print(raw_html.shape)
+        # print(raw_url.shape)
 
         self.logger.debug(f'finish\turls: {len(urls)}\tcontents: {len(contents)}', self.gpu)
         return urls, contents
 
     def __url_tokenizer(self, urls):
-        tokens = []
-        for url in tqdm(urls, desc='url tokenization'):
-            token = []
-            for u in url:
-                token.append('[CLS]')
-                token.extend(list(u))
-            token = ' '.join(token)
-            tokens.append(token)
-        tokenized_output = self.tokenizer(tokens, return_tensors='pt', padding='max_length', max_length=self.max_length, truncation=True)
-        return tokenized_output
+        # tokens = []
+        # for url in tqdm(urls, desc='url tokenization'):
+        #     tokens.append(self.url_tokenizer.tokenize(url, max_length=self.max_length))
+        # tokenized_output = self.tokenizer(tokens, return_tensors='pt', padding='max_length', max_length=self.max_length, truncation=True)
+        return self.url_tokenizer.tokenize(urls, max_length=self.max_length)
 
     def __content_tokenizer(self, contents):
         tokens = ['[CLS]']
