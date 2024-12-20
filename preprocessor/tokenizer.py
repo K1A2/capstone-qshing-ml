@@ -83,9 +83,11 @@ class QbertUrlTokenizer:
             url_item = []
             mask_item = []
             for idx, url in enumerate(urls):
-                url_item.extend([self.token_to_idx.get(ch, self.unk_idx) for ch in url])
-                if idx != len(url_list) - 1:
-                    url_item.append(self.cls_idx)
+                tokens = [self.token_to_idx.get(ch, self.unk_idx) for ch in url]
+                if len(tokens) == 0:
+                    continue
+                url_item.append(self.cls_idx)
+                url_item.extend(tokens)
             mask_item = [1] * len(url_item)
             
             if max_length is not None:

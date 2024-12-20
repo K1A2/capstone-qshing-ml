@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
-from transformers import BertModel
+from transformers import BertModel, BertConfig
 
 class QsingBertModel(nn.Module):
     def __init__(self):
         super(QsingBertModel, self).__init__()
         
         self.bert_urls = BertModel.from_pretrained('bert-base-uncased')
+        # self.bert_html = BertModel(config=BertConfig())
         self.bert_html = BertModel.from_pretrained('bert-base-uncased')
         
         self.fc = nn.Linear(768 * 2, 512)
