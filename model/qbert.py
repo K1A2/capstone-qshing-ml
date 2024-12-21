@@ -14,6 +14,9 @@ class QsingBertModel(nn.Module):
         self.gelu = nn.GELU()
         self.output_layer = nn.Linear(512, 1)
         self.sigmoid = nn.Sigmoid()
+        
+    def median_pooling(self, outputs):
+        return torch.median(outputs, dim=1).values
 
     def forward(self, input):
         url_input_ids = input['url_input_ids']
@@ -22,10 +25,14 @@ class QsingBertModel(nn.Module):
         html_attention_mask = input['html_attention_mask']
         
         url_output = self.bert_urls(input_ids=url_input_ids, attention_mask=url_attention_mask)
-        url_cls_embedding = url_output.last_hidden_state[:, 0, :]
+        # url_cls_embedding = url_output.last_hidden_state[:, 0, :]
+        url_cls_embedding = self.median_pooling(url_output.last_hidden_state)
+        # print(url_cls_embedding.isnan().any())
         
         html_output = self.bert_html(input_ids=html_input_ids, attention_mask=html_attention_mask)
-        html_cls_embedding = html_output.last_hidden_state[:, 0, :]
+        # html_cls_embedding = html_output.last_hidden_state[:, 0, :]
+        html_cls_embedding = self.median_pooling(html_output.last_hidden_state)
+        # print(html_cls_embedding.isnan().any())
 
         combined = torch.cat((url_cls_embedding, html_cls_embedding), dim=1)
 
@@ -33,7 +40,6 @@ class QsingBertModel(nn.Module):
         x = self.gelu(x)
 
         logits = self.output_layer(x)
-        logits = logits.squeeze()
         output = self.sigmoid(logits)
 
-        return logits, output
+        return logits.squeeze(), output.squeeze()

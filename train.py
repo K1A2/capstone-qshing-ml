@@ -250,6 +250,7 @@ class Trainer:
         else:
             y_hat, y_prob  = model(X)
             loss = criterion(y_hat, y_true.float())
+            # print(y_hat, y_prob, y_true)
         # predicted_labels = (y_prob >= 0.5).long()
         # self.logger.debug(f'{y_prob} {predicted_labels}, {predicted_labels == y_true}', self.gpu)
         return loss, model

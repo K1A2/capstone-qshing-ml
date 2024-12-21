@@ -42,7 +42,7 @@ class MultimodalDataset(torch.utils.data.Dataset):
                 'html_input_ids': self.contents['input_ids'][idx].squeeze(0),
                 'html_attention_mask': self.contents['attention_mask'][idx].squeeze(0)
             },
-            self.labels.iloc[idx].squeeze(0)
+            self.labels[idx].squeeze(0)
         )
 
 
@@ -101,7 +101,7 @@ class DataPreprocessor:
         
         # con = sqlite3.connect(self.data_path)
         # self.raw_data = pd.read_sql("SELECT url, html, label FROM data", con, index_col=None)
-        self.raw_data = pd.read_csv(self.data_path)
+        self.raw_data = pd.read_csv(self.data_path, encoding='utf-8')
         
         label_counts = self.raw_data['label'].value_counts()
         count_f = label_counts.get(0, 0)
@@ -123,10 +123,11 @@ class DataPreprocessor:
         
         self.logger.debug(f'balanced raw data: {self.raw_data.shape[0]}', self.gpu)
 
-        self.labels = self.raw_data.iloc[:]['label']
+        self.labels = torch.tensor(self.raw_data.iloc[:]['label'].values)
         urls, contents = self.__extract_data()
         
-        self.url_tokenizer.fit(urls, save_path='./data/tokenizer')
+        print(urls[0])
+        # self.url_tokenizer.fit(urls, save_path='./data/tokenizer')
 
         self.contents = self.__content_tokenizer(contents)
         
@@ -154,7 +155,7 @@ class DataPreprocessor:
             pickle.dump({'train_idx': self.train_idx, 'val_idx': self.val_idx}, f, pickle.HIGHEST_PROTOCOL)
 
     def __extract_data_thread(self, thread_idx, start_idx, end_idx):
-        self.logger.debug(f'extractor thread {thread_idx}: start', self.gpu)
+        self.logger.debug(f'extractor thread {thread_idx}: start\t{start_idx} - {end_idx}', self.gpu)
 
         urls, contents = [], []
         converter = HTML2Text()
@@ -164,6 +165,7 @@ class DataPreprocessor:
 
         for i in range(start_idx, end_idx):
             html = self.raw_data.iloc[i]['html']
+            url = self.raw_data.iloc[i]['url']
             content = converter.handle(html)
 
             sentences = re.split(r'(?<=[.!?]) +', content)
@@ -180,16 +182,17 @@ class DataPreprocessor:
                     # contents.append('')
             contents.append(contents_parts)
 
-            soup = BeautifulSoup(html, 'html.parser')
-            url_parts = []
-            for a_tag in soup.find_all('a', href=True):
-                url_parts.append(a_tag['href'])
-            for a_tag in soup.find_all('link', href=True):
-                url_parts.append(a_tag['href'])
-            urls.append(url_parts)
+            urls.append([url])
+            # soup = BeautifulSoup(html, 'html.parser')
+            # url_parts = []
+            # for a_tag in soup.find_all('a', href=True):
+            #     url_parts.append(a_tag['href'])
+            # for a_tag in soup.find_all('link', href=True):
+            #     url_parts.append(a_tag['href'])
+            # urls.append(url_parts)
 
             if i % 2000 == 0:
-                self.logger.debug(f'extractor thread {thread_idx}: {i + 1} finish', self.gpu)
+                self.logger.debug(f'extractor thread {thread_idx}: {end_idx - i + 1}/{end_idx - start_idx}', self.gpu)
 
         self.logger.debug(f'extractor thread {thread_idx}: finish', self.gpu)
         return urls, contents
@@ -249,6 +252,10 @@ class DataPreprocessor:
         return tokenized_output
 
     def get_data(self):
+        print(self.urls['input_ids'].isnan().any(), self.urls['attention_mask'].isnan().any())
+        print(self.contents['input_ids'].isnan().any(), self.contents['attention_mask'].isnan().any())
+        print(self.labels.isnan().any())
+        
         dataset = MultimodalDataset(self.urls, self.contents, self.labels)
         
         train_dataset = torch.utils.data.Subset(dataset, self.train_idx)
