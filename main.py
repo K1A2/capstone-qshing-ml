@@ -120,6 +120,14 @@ def main(rank: int,
 
 if __name__ == '__main__':
     args = get_arg_parse()
+    
+    if args.model_path != '':
+        datetime_now = args.model_path
+    else:
+        datetime_now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    args.save_path = os.path.join('./save', datetime_now)
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
 
     if args.parallel == 1:
         args.ngpus_per_node = torch.cuda.device_count()

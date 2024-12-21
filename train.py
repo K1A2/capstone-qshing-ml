@@ -82,13 +82,7 @@ class Trainer:
                 # label_smoothing=args.label_smoothing
             )
             
-        if args.model_path != '':
-            datetime_now = args.model_path
-        else:
-            datetime_now = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.model_save_path = os.path.join('.', 'model_dir', datetime_now)
-        if not os.path.exists(self.model_save_path):
-            os.makedirs(self.model_save_path)
+        self.model_save_path = args.save_path
         self.logger.debug(f'save path: {self.model_save_path}', self.gpu)
             
     def __init_optimizer(self, args):
@@ -114,12 +108,12 @@ class Trainer:
         if args.lr_scheduler == LRSchedulerEnum.cycle:
             self.logger.debug(f'lr scheduler cycle')
             return optim.lr_scheduler.CyclicLR(self.optimizer, base_lr=1e-5, 
-                    max_lr=args.max_learning_rate, step_size_up=len(self.data_pre.trainloader)*10, mode='triangular2')
+                    max_lr=args.max_learning_rate, step_size_up=len(self.data_train)*10, mode='triangular2')
             
         if args.lr_scheduler == LRSchedulerEnum.one_cycle:
             self.logger.debug(f'lr scheduler one cycle')
             return optim.lr_scheduler.OneCycleLR(self.optimizer, args.max_learning_rate, epochs=self.epoch,
-                    steps_per_epoch=len(self.data_pre.trainloader))
+                    steps_per_epoch=len(self.data_train))
             
         if args.lr_scheduler == LRSchedulerEnum.step_lr: 
             self.logger.debug(f'lr scheduler step cycle')

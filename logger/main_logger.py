@@ -31,13 +31,8 @@ class MainLogger:  # Singleton
         self.logger.addHandler(handler)
 
         if args.log_file == 1:
-            log_save_path = "./log"
-            if not os.path.exists(log_save_path):
-                os.makedirs(log_save_path)
-
-            datetime_now = datetime.now().strftime("%Y%m%d_%H%M%S")
             formatter_file = logging.Formatter("%(asctime)s %(levelname)s:%(message)s")
-            handler_file = logging.FileHandler(os.path.join(log_save_path, f'{datetime_now}.log'))
+            handler_file = logging.FileHandler(os.path.join(args.save_path, f'train.log'))
             handler_file.setLevel(logging.DEBUG)
             handler_file.setFormatter(formatter_file)
             self.logger.addHandler(handler_file)
