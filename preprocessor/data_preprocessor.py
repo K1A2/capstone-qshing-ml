@@ -95,6 +95,8 @@ class DataPreprocessor:
             self.val_idx = train_val_idx['val_idx']
         else:
             self.__data_init()
+            
+        self.logger.debug(f'vocab size: {len(self.url_tokenizer.token_to_idx.keys())}')
 
     def __data_init(self):
         self.url_tokenizer = QbertUrlTokenizer()

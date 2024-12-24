@@ -159,7 +159,7 @@ class Trainer:
         n = 0
         with torch.no_grad() :
             self.model.eval()
-            for X, y_true in tqdm(data_loader, desc='val'):
+            for X, y_true in tqdm(data_loader, desc='val', ncols=0):
                 if self.local_gpu_id == -1:
                     X['url_input_ids'] = X['url_input_ids'].to(self.device)
                     X['url_attention_mask'] = X['url_attention_mask'].to(self.device)
