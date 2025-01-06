@@ -341,7 +341,7 @@ class Trainer:
         
         self.train_losses = []
         self.valid_losses = []
-        self.train_acc_list = []
+        # self.train_acc_list = []
         self.valid_top1_list = []
         self.valid_top5_list = []
         self.valid_superclass_list = []
@@ -357,11 +357,11 @@ class Trainer:
             self.model, self.optimizer, train_loss = self.__feed(trainloader, self.model, self.criterion, self.optimizer, self.device)
             self.train_losses.append(train_loss)
 
-            train_top1, _, _, _ = self.__get_eval(trainloader, get_top5=False, get_superclass=False)
+            # train_top1, _, _, _ = self.__get_eval(trainloader, get_top5=False, get_superclass=False)
             val_top1, val_top5, val_superclass, valid_loss = self.__get_eval(validationloader, get_top5=False, get_superclass=False)
             self.valid_losses.append(valid_loss)
 
-            self.train_acc_list.append(train_top1)
+            # self.train_acc_list.append(train_top1)
             self.valid_top1_list.append(val_top1)
             self.valid_top5_list.append(val_top5)
             self.valid_superclass_list.append(val_superclass)
@@ -369,7 +369,7 @@ class Trainer:
             self.logger.debug(f'Epoch: {epoch}\t'
                 # f'Train loss: {train_loss:.4f}\t'
                 f'Valid loss: {valid_loss:.4f}\t'
-                f'Train accuracy: {100 * train_top1:.2f}\t'
+                # f'Train accuracy: {100 * train_top1:.2f}\t'
                 f'Valid top1 accuracy: {100 * val_top1:.2f}\t'
                 #   f'Valid top5 accuracy: {100 * val_top5:.2f}\t'
                 #   f'Valid superclass accuracy: {100 * val_superclass:.2f}'

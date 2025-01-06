@@ -24,6 +24,8 @@ import logger.utils as log_utils
 from sklearn.model_selection import train_test_split
 import pickle
 
+import pyarrow.parquet as pq
+
 
 class MultimodalDataset(torch.utils.data.Dataset):
     def __init__(self, urls, contents, labels):
@@ -103,7 +105,19 @@ class DataPreprocessor:
         
         # con = sqlite3.connect(self.data_path)
         # self.raw_data = pd.read_sql("SELECT url, html, label FROM data", con, index_col=None)
-        self.raw_data = pd.read_csv(self.data_path, encoding='utf-8')
+        # self.raw_data = pd.read_csv(self.data_path, encoding='utf-8')
+        # self.raw_data = pd.read_parquet(self.data_path)
+        # table = pq.read_table(self.data_path)
+        # self.raw_data = table.to_pandas()
+        self.raw_data = pd.read_pickle(self.data_path)
+        # self.raw_data = pd.read_csv(
+        #     self.data_path,
+        #     delimiter="\x1F",
+        #     engine="python",
+        #     quoting=3,
+        #     escapechar="\\",
+        #     encoding='utf-8'
+        # )
         
         label_counts = self.raw_data['label'].value_counts()
         count_f = label_counts.get(0, 0)
