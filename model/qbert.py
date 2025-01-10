@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from transformers import BertModel, BertConfig
+from transformers import BertModel, BertConfig, MobileBertConfig, MobileBertModel
 
 
 class UrlCnnModel(nn.Module):
@@ -53,10 +53,11 @@ class QsingBertModel(nn.Module):
         # self.bert_urls = BertModel.from_pretrained('bert-base-uncased')
         self.bert_urls = UrlCnnModel(
             98,
+            output_dim=512
         )
-        self.bert_html = BertModel.from_pretrained('bert-base-uncased')
+        self.bert_html = MobileBertModel.from_pretrained("google/mobilebert-uncased")
         
-        self.fc = nn.Linear(768 * 2, 512)
+        self.fc = nn.Linear(512 * 2, 512)
         self.gelu = nn.GELU()
         self.output_layer = nn.Linear(512, 1)
         self.sigmoid = nn.Sigmoid()
