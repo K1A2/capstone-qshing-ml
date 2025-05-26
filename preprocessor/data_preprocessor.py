@@ -147,7 +147,7 @@ class DataPreprocessor:
 
         self.contents = self.__content_tokenizer(contents)
         
-        self.logger.debug(f'input_ids shape: {self.contents['input_ids'].shape}\attention_mask shape: {self.contents['attention_mask'].shape}')
+        self.logger.debug(f"input_ids shape: {self.contents['input_ids'].shape}\attention_mask shape: {self.contents['attention_mask'].shape}")
         
         self.urls = self.__url_tokenizer(urls)
         
